@@ -22,12 +22,12 @@ function HistoryPage() {
     }
   }
 
-  const sortedHistory = [...history].sort((a, b) => 
-    a.message.localeCompare(b.message)
+  const sortedHistory = [...history].sort((a, b) =>
+    new Date(b.timestamp) - new Date(a.timestamp)
   )
-  
-  const filteredHistory = filter === 'all' 
-    ? sortedHistory 
+
+  const filteredHistory = filter === 'all'
+    ? sortedHistory
     : sortedHistory.filter(item => item.category === filter)
 
   const categories = [...new Set(history.map(item => item.category))]
@@ -127,6 +127,11 @@ function HistoryPage() {
                       }`}>
                         {item.urgency} Urgency
                       </span>
+                      {item.escalate && (
+                        <span className="text-xs bg-red-100 text-red-800 px-3 py-1 rounded-full font-semibold">
+                          ⚠ Escalate
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-gray-400 ml-4">

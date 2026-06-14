@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { categorizeMessage } from '../utils/llmHelper'
 import { calculateUrgency } from '../utils/urgencyScorer'
-import { getRecommendedAction } from '../utils/templates'
+import { getRecommendedAction, shouldEscalate } from '../utils/templates'
 
 function AnalyzePage() {
   const [message, setMessage] = useState('')
@@ -26,22 +26,24 @@ function AnalyzePage() {
 
     setIsLoading(true)
     setResults(null)
-    
+
     try {
       // Run categorization (LLM call)
       const { category, reasoning } = await categorizeMessage(message)
-      
+
       // Calculate urgency (rule-based)
       const urgency = calculateUrgency(message)
-      
+
       // Get recommended action (template-based)
-      const recommendedAction = getRecommendedAction(category)
-      
+      const recommendedAction = getRecommendedAction(category, urgency)
+      const escalate = shouldEscalate(category, urgency)
+
       const analysisResult = {
         message,
         category,
         urgency,
         recommendedAction,
+        escalate,
         reasoning,
         timestamp: new Date().toISOString()
       }
@@ -128,7 +130,7 @@ function AnalyzePage() {
         {results && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Analysis Results</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <div className="text-sm font-semibold text-gray-600 mb-1">Category</div>
@@ -147,6 +149,13 @@ function AnalyzePage() {
                   {results.urgency}
                 </div>
               </div>
+
+              {results.escalate && (
+                <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex items-center space-x-2">
+                  <span className="text-red-600 font-bold">⚠ Escalation Recommended</span>
+                  <span className="text-red-700 text-sm">— This message requires prompt attention from a senior agent.</span>
+                </div>
+              )}
 
               <div>
                 <div className="text-sm font-semibold text-gray-600 mb-1">Recommended Action</div>

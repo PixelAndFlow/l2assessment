@@ -17,14 +17,19 @@ function DashboardPage() {
   const loadDashboardData = () => {
     const history = JSON.parse(localStorage.getItem('triageHistory') || '[]')
     const today = new Date().toDateString()
-    const todayMessages = history.filter(item => 
+    const todayMessages = history.filter(item =>
       new Date(item.timestamp).toDateString() === today
     )
 
     // Calculate stats
     const highUrgency = history.filter(h => h.urgency === 'High').length
-    const totalDays = history.length > 0 ? 7 : 1
-    
+    let totalDays = 1
+    if (history.length > 1) {
+      const timestamps = history.map(h => new Date(h.timestamp).getTime())
+      const spanMs = Math.max(...timestamps) - Math.min(...timestamps)
+      totalDays = Math.max(1, Math.ceil(spanMs / (1000 * 60 * 60 * 24)))
+    }
+
     setStats({
       total: history.length,
       today: todayMessages.length,
@@ -92,7 +97,7 @@ function DashboardPage() {
                         <span className="text-gray-600">{cat.count} ({percentage.toFixed(0)}%)</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-blue-500 h-2 rounded-full"
                           style={{ width: `${percentage}%` }}
                         />
